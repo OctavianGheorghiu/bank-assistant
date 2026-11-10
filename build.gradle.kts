@@ -24,6 +24,13 @@ subprojects {
     dependencies {
         "implementation"(platform(SpringBootPlugin.BOM_COORDINATES))
         "implementation"(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
+
+        // Lombok in every service (docs/design/code-conventions.md); version managed by the Spring Boot BOM
+        "compileOnly"(platform(SpringBootPlugin.BOM_COORDINATES))
+        "annotationProcessor"(platform(SpringBootPlugin.BOM_COORDINATES))
+        "compileOnly"("org.projectlombok:lombok")
+        "annotationProcessor"("org.projectlombok:lombok")
+
         "testImplementation"("org.springframework.boot:spring-boot-starter-test")
         "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
     }

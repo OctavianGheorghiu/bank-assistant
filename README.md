@@ -79,3 +79,4 @@ Build and test with `./gradlew build` (Docker must be running: the tests start P
 - [Architecture](docs/design/architecture.md): components and who calls whom
 - [Roadmap](docs/design/roadmap.md) and [phase briefs](docs/phases/)
 - [Decision log](docs/state/decision-log.md)
+- [Code conventions](docs/design/code-conventions.md): package layout, Lombok, JPA and logging rules for every service

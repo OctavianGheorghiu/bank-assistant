@@ -13,28 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
 /** Runs the real migrations and seed data against the same PostgreSQL image as Compose. */
 @SpringBootTest
+@Import(TestcontainersConfiguration.class)
 class AccountsApiTests {
-
-    @TestConfiguration(proxyBeanMethods = false)
-    static class Database {
-        @Bean
-        @ServiceConnection
-        PostgreSQLContainer postgres() {
-            return new PostgreSQLContainer(DockerImageName.parse("pgvector/pgvector:0.8.7-pg18-trixie")
-                    .asCompatibleSubstituteFor("postgres"));
-        }
-    }
 
     @Autowired
     WebApplicationContext context;

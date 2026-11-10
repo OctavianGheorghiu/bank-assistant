@@ -9,7 +9,7 @@ The build, test, start and smoke-test commands and the repository location and b
 | Java | 21 (Gradle toolchain; downloaded by the foojay resolver if missing) | `build.gradle.kts` |
 | Gradle | 9.9.0 (wrapper) | `gradle/wrapper/gradle-wrapper.properties` |
 | foojay toolchain resolver plugin | 1.0.0 | `settings.gradle.kts` |
-| Spring Boot | 4.1.2 (manages Flyway 12.4.0, PostgreSQL JDBC 42.7.14, Testcontainers 2.0.5) | `build.gradle.kts` |
+| Spring Boot | 4.1.2 (manages Hibernate, Spring Data JPA, Lombok, Flyway 12.4.0, PostgreSQL JDBC 42.7.14, Testcontainers 2.0.5) | `build.gradle.kts` |
 | Spring Cloud | 2025.1.4 (Gateway 5.0.4, WebFlux variant) | `build.gradle.kts` |
 | Spring AI | 2.0.2, from phase 2 (supports Boot 4.0 and 4.1) | not yet used |
 | PostgreSQL image | `pgvector/pgvector:0.8.7-pg18-trixie` (PostgreSQL 18, pgvector 0.8.7) | `compose.yaml`, `AccountsApiTests` |
@@ -50,9 +50,9 @@ Every Spring service exposes `/actuator/health`, used by the Compose health chec
 
 | Path | What |
 | --- | --- |
-| `settings.gradle.kts`, `build.gradle.kts` | Module list; shared Java toolchain, BOMs and test setup for every module |
+| `settings.gradle.kts`, `build.gradle.kts` | Module list; shared Java toolchain, BOMs, Lombok and test setup for every module |
 | `<service>/build.gradle.kts` | That service's dependencies only |
-| `<service>/src/main/java/com/bankassistant/<name>/` | Package per service: `accounts`, `gateway` |
+| `<service>/src/main/java/com/bankassistant/<name>/` | Root package per service (`accounts`, `gateway`) with sub-packages `controller`, `service`, `repository`, `model/entity`, `model/dto`, `events`, `exception`, `config`, `filter`, as needed: see [code-conventions.md](../design/code-conventions.md) |
 | `accounts-service/src/main/resources/db/migration/` | Flyway migrations (`V1__schema.sql`, `V2__seed.sql`) |
 | `Dockerfile` | One multi-stage Dockerfile for every service: `--build-arg MODULE=<service>` |
 | `compose.yaml` | The whole stack; later infrastructure joins through Compose profiles (decision #1) |
