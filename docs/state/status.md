@@ -4,7 +4,7 @@ Update this table at the end of each phase chat. Outcome notes record what was a
 
 | Phase | Status | Brief |
 | --- | --- | --- |
-| 1. Foundation | Not started | [phase-1-foundation.md](../phases/phase-1-foundation.md) |
+| 1. Foundation | Gate passed 2026-11-10; branch phase-1-foundation pushed, not yet merged | [phase-1-foundation.md](../phases/phase-1-foundation.md) |
 | 2. First agent | Not started | [phase-2-first-agent.md](../phases/phase-2-first-agent.md) |
 | 3. MCP | Not started | [phase-3-mcp.md](../phases/phase-3-mcp.md) |
 | 4. RAG | Not started | [phase-4-rag.md](../phases/phase-4-rag.md) |
@@ -20,7 +20,10 @@ Update this table at the end of each phase chat. Outcome notes record what was a
 
 ### 1. Foundation
 
-None yet.
+- Built: Gradle monorepo, PostgreSQL 18 with pgvector, accounts-service (Flyway schema and seed, three GET endpoints), api-gateway (route plus JWT validation), Keycloak with the `bank` realm, smoke-test script, GitHub Actions build. The gate passes from empty volumes in under two minutes.
+- Deviation: Keycloak arrived in phase 1 instead of a self-issued JWT (decision #4), so the default stack uses about 1.1 GiB.
+- For phase 2: tools call the three accounts endpoints with the `X-User-Id` header (phase 2 decides how the identity reaches tools, decision #11). There is no spending-summary endpoint; sum transactions filtered by category and dates. The `bank-cli` client has only the password grant; the web chat page needs a browser login flow added to the realm.
+- Known gaps: accounts-service port 8081 bypasses the gateway (decision #35); the gateway checks issuer and signature but not the audience; seed dates move with the day the database was created; a new schema needs `docker compose down -v` or its SQL run by hand.
 
 ### 2. First agent
 

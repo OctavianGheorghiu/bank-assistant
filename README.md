@@ -47,7 +47,31 @@ Progress is tracked in [docs/state/status.md](docs/state/status.md).
 
 ## Getting started
 
-No code yet. Build and run instructions arrive with phase 1.
+You need Docker (Docker Desktop on Windows, about 8 GB of memory for it) and bash with curl (Git Bash on Windows). Java is optional: the Gradle wrapper downloads JDK 21 itself, and the Docker build needs no local Java at all.
+
+1. Copy `.env.example` to `.env` and replace every `change-me` with a password of your own. `.env` is git-ignored.
+2. Start everything and run the checks:
+
+   ```bash
+   bash scripts/smoke-test.sh
+   ```
+
+   The script runs `docker compose up -d --build --wait` (the first run takes a few minutes), then checks each phase's gate. Or start the stack yourself with `docker compose up -d --build --wait`.
+
+3. Ask for a balance through the gateway as one of the demo customers (`alice`, `bob` or `carol`, all with `DEMO_USER_PASSWORD` from `.env`):
+
+   ```bash
+   set -a; . ./.env; set +a
+   TOKEN=$(curl -s -d grant_type=password -d client_id=bank-cli -d username=alice --data-urlencode "password=$DEMO_USER_PASSWORD" http://localhost:8180/realms/bank/protocol/openid-connect/token | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+   curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/accounts
+   ```
+
+| URL | What |
+| --- | --- |
+| http://localhost:8080/api/accounts | api-gateway (needs a token) |
+| http://localhost:8180 | Keycloak (admin console: user `admin`, password `KEYCLOAK_ADMIN_PASSWORD`) |
+
+Build and test with `./gradlew build` (Docker must be running: the tests start PostgreSQL through Testcontainers). Stop with `docker compose down`; `docker compose down -v` also deletes the database, which is recreated with the same seed data on the next start.
 
 ## Documentation
 
