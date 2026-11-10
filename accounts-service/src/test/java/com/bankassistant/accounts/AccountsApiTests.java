@@ -46,11 +46,13 @@ class AccountsApiTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.currency").value("EUR"))
                 .andReturn().getResponse().getContentAsString();
-        String transactions = mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice"))
+        String transactions = mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice")
+                        .param("limit", "1000"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.truncated").value(false))
                 .andReturn().getResponse().getContentAsString();
 
-        List<String> amounts = JsonPath.read(transactions, "$[*].amount");
+        List<String> amounts = JsonPath.read(transactions, "$.transactions[*].amount");
         BigDecimal sum = amounts.stream().map(BigDecimal::new).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         assertThat(amounts).hasSizeGreaterThan(300); // about a year of activity
@@ -59,12 +61,33 @@ class AccountsApiTests {
     }
 
     @Test
-    void filtersTransactionsByCategory() throws Exception {
+    void filtersTransactionsByCategoryIgnoringCase() throws Exception {
         mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice")
-                        .param("category", "groceries"))
+                        .param("category", "Groceries"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThan(50)))
-                .andExpect(jsonPath("$[*].category").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("groceries"))));
+                .andExpect(jsonPath("$.transactions.length()").value(org.hamcrest.Matchers.greaterThan(50)))
+                .andExpect(jsonPath("$.transactions[*].category").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("groceries"))));
+    }
+
+    @Test
+    void defaultLimitTruncatesAndSaysSo() throws Exception {
+        mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions.length()").value(100))
+                .andExpect(jsonPath("$.truncated").value(true));
+    }
+
+    @Test
+    void impossibleFiltersAreRejected() throws Exception {
+        mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice")
+                        .param("from", "2026-11-01").param("to", "2026-10-01"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice")
+                        .param("limit", "0"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/accounts/alice-current/transactions").header("X-User-Id", "alice")
+                        .param("limit", "1001"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

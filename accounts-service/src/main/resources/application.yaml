@@ -9,8 +9,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/bank
     username: accounts
     password: ${ACCOUNTS_DB_PASSWORD:}
-    hikari:
-      schema: accounts
   flyway:
     schemas: accounts
   jpa:
@@ -25,6 +23,9 @@ logging:
   level:
     # Debug shows the service-layer entry logs as well as the controller ones
     com.bankassistant: debug
+  pattern:
+    # Line breaks in a message become spaces, so a value from a request cannot start a fake log line
+    console: "%d{ISO8601} %5p [%15.15t] %-40.40logger{39} : %replace(%m){'[\\r\\n]+', ' '}%n"
 
 management:
   endpoints:

@@ -62,6 +62,15 @@ class ApiGatewayApplicationTests {
     }
 
     @Test
+    void tokenWithoutUsernameIsRejectedAtTheGateway() {
+        client.mutateWith(mockJwt().jwt(jwt -> jwt.claims(claims -> claims.remove("preferred_username"))))
+                .get().uri("/api/accounts")
+                .header("X-User-Id", "bob")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
     void healthCheckIsOpen() {
         client.get().uri("/actuator/health").exchange().expectStatus().isOk();
     }

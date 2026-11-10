@@ -57,7 +57,7 @@ Every Spring service exposes `/actuator/health`, used by the Compose health chec
 | `Dockerfile` | One multi-stage Dockerfile for every service: `--build-arg MODULE=<service>` |
 | `compose.yaml` | The whole stack; later infrastructure joins through Compose profiles (decision #1) |
 | `infra/postgres/init/01-init.sh` | Creates one schema and one login role per service, on the first start only |
-| `infra/keycloak/bank-realm.json` | Realm imported on Keycloak's first start |
+| `infra/keycloak/bank-realm.json` | Realm imported on Keycloak's first start only: after editing it, an existing volume needs `docker compose down -v` |
 | `scripts/smoke-test.sh` | Gate checks of every phase so far |
 
 Adding a service: add it to `settings.gradle.kts`, give it a `build.gradle.kts`, add a Compose entry with `build.args.MODULE`, and, if it needs a database, a schema and role in the init script (an existing volume then needs `docker compose down -v`, or the SQL run by hand).
@@ -68,9 +68,10 @@ Adding a service: add it to `settings.gradle.kts`, give it a `build.gradle.kts`,
 | --- | --- | --- | --- |
 | `GET /api/accounts` (gateway) → `GET /accounts` (accounts-service): `[{id, name, type, currency, balance}]` | API path | 1 | 2, 3 |
 | `GET /api/accounts/{accountId}/balance` → `{accountId, amount, currency}` | API path | 1 | 2, 3 |
-| `GET /api/accounts/{accountId}/transactions?from=&to=&category=` → `[{id, bookedAt, amount, currency, category, description, counterparty}]`, newest first; dates inclusive ISO `yyyy-MM-dd`, all filters optional | API path | 1 | 2, 3 |
+| `GET /api/accounts/{accountId}/transactions?from=&to=&category=&limit=` → `{transactions: [{id, bookedAt, amount, currency, category, description, counterparty}], truncated}`, newest first; dates inclusive ISO `yyyy-MM-dd`; category ignores case; `limit` 1 to 1000, default 100; all optional. `truncated: true` means more rows matched, so a sum over the list is incomplete: narrow the dates or raise the limit. 400 when `from` is after `to` or `limit` is out of range (decision #38) | API path | 1 | 2, 3 |
 | Money in JSON: `amount` is a decimal string with two places (`"-44.90"`), negative means money out; stored as BIGINT cents | Format | 1 | all |
-| `X-User-Id` header: the customer id; set only by the gateway from the token, any incoming value is dropped. accounts-service answers 404 for an account of another customer and 400 without the header | Header | 1 | 2, 3, 5, 6 |
-| Token: Keycloak realm `bank`, issuer `http://localhost:8180/realms/bank`, customer id in claim `preferred_username`; client `bank-cli` (public, password grant, for scripts only) | Token format | 1 | 2, 3, 8 |
+| `X-User-Id` header: the customer id; set only by the gateway from the token, any incoming value is dropped; a token without `preferred_username` gets 401 at the gateway. accounts-service answers 404 for an account of another customer and 400 without the header | Header | 1 | 2, 3, 5, 6 |
+| Token: Keycloak realm `bank`, issuer `http://localhost:8180/realms/bank`, audience `bank-api` (required by the gateway, `spring.security.oauth2.resourceserver.jwt.audiences`), customer id in claim `preferred_username` (decision #39); client `bank-cli` (public, password grant, for scripts only). Every new client that calls the gateway needs the `bank-api` audience mapper, as on `bank-cli` in `bank-realm.json` | Token format | 1 | 2, 3, 8 |
+| Log lines: both services print the console log with a pattern that turns line breaks in a message into spaces (`logging.pattern.console`), so request values cannot forge log lines; a new service copies it | Configuration | 1 | all |
 | Seed data: customers `alice`, `bob`, `carol`; accounts `<customer>-current` and `<customer>-savings` in EUR; transaction categories `opening`, `salary`, `rent`, `utilities`, `transfer`, `groceries`, `restaurants`, `transport`, `shopping`, `entertainment`; dates relative to the day the database was created | Seed data | 1 | all demos |
 | Database schemas and roles: `accounts`, `keycloak`, one login role per schema, each limited to its own schema | Configuration | 1 | 4, 6 |

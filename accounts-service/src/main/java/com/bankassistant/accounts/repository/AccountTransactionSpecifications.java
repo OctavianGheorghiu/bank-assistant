@@ -1,6 +1,7 @@
 package com.bankassistant.accounts.repository;
 
 import java.time.OffsetDateTime;
+import java.util.Locale;
 
 import com.bankassistant.accounts.model.entity.AccountTransaction;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,7 +24,8 @@ public final class AccountTransactionSpecifications {
         return (root, query, cb) -> cb.lessThan(root.get("bookedAt"), before);
     }
 
+    /** Ignores case, so "Groceries" finds the "groceries" rows. */
     public static Specification<AccountTransaction> inCategory(String category) {
-        return (root, query, cb) -> cb.equal(root.get("category"), category);
+        return (root, query, cb) -> cb.equal(cb.lower(root.get("category")), category.toLowerCase(Locale.ROOT));
     }
 }

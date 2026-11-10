@@ -16,8 +16,8 @@ check() { # description, expected, actual
     if [ "$2" = "$3" ]; then echo "PASS  $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; failures=$((failures + 1)); fi
 }
 http_status() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
-token() { # username -> access token from Keycloak (empty on failure)
-    curl -s -d grant_type=password -d client_id=bank-cli -d username="$1" --data-urlencode "password=$DEMO_USER_PASSWORD" \
+token() { # username [client] -> access token from Keycloak (empty on failure)
+    curl -s -d grant_type=password -d client_id="${2:-bank-cli}" -d username="$1" --data-urlencode "password=$DEMO_USER_PASSWORD" \
         "$KEYCLOAK/realms/bank/protocol/openid-connect/token" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p'
 }
 
@@ -38,6 +38,10 @@ check "forged X-User-Id is replaced by the token's user" "alice-current alice-sa
     "$(curl -s -H "Authorization: Bearer $alice" -H "X-User-Id: bob" "$GATEWAY/api/accounts" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | xargs)"
 check "another customer's account is not found" 404 \
     "$(http_status -H "Authorization: Bearer $alice" "$GATEWAY/api/accounts/bob-current/balance")"
+# admin-cli is Keycloak's built-in client in every realm: a valid token, but not issued for bank-api
+other=$(token alice admin-cli)
+check "token for another client (wrong audience) is rejected" "yes 401" \
+    "$([ -n "$other" ] && echo yes || echo no) $(http_status -H "Authorization: Bearer $other" "$GATEWAY/api/accounts")"
 
 if [ "$failures" -eq 0 ]; then echo "All checks passed"; else echo "$failures check(s) failed"; fi
 exit $((failures > 0))

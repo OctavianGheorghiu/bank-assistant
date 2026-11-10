@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.bankassistant.accounts.model.dto.AccountResponse;
 import com.bankassistant.accounts.model.dto.BalanceResponse;
-import com.bankassistant.accounts.model.dto.TransactionResponse;
+import com.bankassistant.accounts.model.dto.TransactionsResponse;
 import com.bankassistant.accounts.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,14 +42,15 @@ public class AccountController {
     }
 
     @GetMapping("/{accountId}/transactions")
-    public List<TransactionResponse> getTransactions(
+    public TransactionsResponse getTransactions(
             @RequestHeader(USER_HEADER) String customerId,
             @PathVariable String accountId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) String category) {
-        log.info("GET /accounts/{}/transactions customerId={} from={} to={} category={}",
-                accountId, customerId, from, to, category);
-        return accountService.getTransactions(customerId, accountId, from, to, category);
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "100") int limit) {
+        log.info("GET /accounts/{}/transactions customerId={} from={} to={} category={} limit={}",
+                accountId, customerId, from, to, category, limit);
+        return accountService.getTransactions(customerId, accountId, from, to, category, limit);
     }
 }
