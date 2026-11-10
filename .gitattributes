@@ -1,0 +1,9 @@
+# Unix line endings everywhere, so scripts work in Linux containers
+* text=auto eol=lf
+
+# Windows scripts need CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.jar binary
+*.png binary
