@@ -1,0 +1,108 @@
+name: bank-assistant
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    environment:
+      POSTGRES_DB: bank
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}
+      # Read by the init script to create one login role per service
+      ACCOUNTS_DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?set it in .env}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set it in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/18, so mount the parent
+      - pgdata:/var/lib/postgresql
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bank"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 512m
+
+  accounts-service:
+    build:
+      context: .
+      args:
+        MODULE: accounts-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank
+      ACCOUNTS_DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?set it in .env}
+    ports:
+      # Kept for debugging (decision #35). It bypasses the gateway: this service trusts X-User-Id as sent.
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8081/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    mem_limit: 512m
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/bank
+      KC_DB_SCHEMA: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set it in .env}
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set it in .env}
+      # Tokens always carry iss=http://localhost:8180/realms/bank, whether fetched from the host or from inside Docker
+      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: -Xms128m -Xmx512m
+      # Read by the ${DEMO_USER_PASSWORD} placeholders in the realm file
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:?set it in .env}
+    ports:
+      - "127.0.0.1:8180:8080"
+    volumes:
+      # Imported on first start only; an existing realm is left as it is
+      - ./infra/keycloak:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The image has no curl, so ask the management port with bash's /dev/tcp
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    mem_limit: 1g
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        MODULE: api-gateway
+    environment:
+      ACCOUNTS_SERVICE_URL: http://accounts-service:8081
+      # Signing keys are fetched inside Docker; the issuer claim still names the host address
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/bank/protocol/openid-connect/certs
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      accounts-service:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    mem_limit: 512m
+
+volumes:
+  pgdata:

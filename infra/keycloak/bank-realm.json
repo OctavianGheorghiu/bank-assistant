@@ -1,0 +1,58 @@
+{
+  "realm": "bank",
+  "enabled": true,
+  "registrationAllowed": false,
+  "editUsernameAllowed": false,
+  "clients": [
+    {
+      "clientId": "bank-cli",
+      "name": "Command line and smoke test",
+      "description": "Public client for getting a token with username and password; local development only",
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "bank-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "bank-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "firstName": "Alice",
+      "lastName": "Martin",
+      "email": "alice@example.test",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "${DEMO_USER_PASSWORD}", "temporary": false }]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "firstName": "Bob",
+      "lastName": "Novak",
+      "email": "bob@example.test",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "${DEMO_USER_PASSWORD}", "temporary": false }]
+    },
+    {
+      "username": "carol",
+      "enabled": true,
+      "firstName": "Carol",
+      "lastName": "Rossi",
+      "email": "carol@example.test",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "${DEMO_USER_PASSWORD}", "temporary": false }]
+    }
+  ]
+}

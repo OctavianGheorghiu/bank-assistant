@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # With both set, keys come from jwk-set-uri and the iss claim must equal issuer-uri (no discovery call)
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bank}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bank/protocol/openid-connect/certs}
+          # Only tokens meant for this API; Keycloak adds the audience through a mapper on each client (bank-realm.json)
+          audiences: bank-api
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # /api/accounts/** from outside -> /accounts/** on accounts-service
+            - id: accounts
+              uri: ${ACCOUNTS_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/accounts/**
+              filters:
+                - StripPrefix=1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    com.bankassistant: debug
+  pattern:
+    # Line breaks in a message become spaces, so a value from a request cannot start a fake log line
+    console: "%d{ISO8601} %5p [%15.15t] %-40.40logger{39} : %replace(%m){'[\\r\\n]+', ' '}%n"

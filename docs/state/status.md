@@ -4,7 +4,7 @@ Update this table at the end of each phase chat. Outcome notes record what was a
 
 | Phase | Status | Brief |
 | --- | --- | --- |
-| 1. Foundation | Not started | [phase-1-foundation.md](../phases/phase-1-foundation.md) |
+| 1. Foundation | Done 2026-11-10 (merged into main) | [phase-1-foundation.md](../phases/phase-1-foundation.md) |
 | 2. First agent | Not started | [phase-2-first-agent.md](../phases/phase-2-first-agent.md) |
 | 3. MCP | Not started | [phase-3-mcp.md](../phases/phase-3-mcp.md) |
 | 4. RAG | Not started | [phase-4-rag.md](../phases/phase-4-rag.md) |
@@ -20,7 +20,11 @@ Update this table at the end of each phase chat. Outcome notes record what was a
 
 ### 1. Foundation
 
-None yet.
+- Built: Gradle monorepo, PostgreSQL 18 with pgvector, accounts-service (Flyway schema and seed, three GET endpoints), api-gateway (route plus JWT validation), Keycloak with the `bank` realm, smoke-test script, GitHub Actions build. The gate passes from empty volumes in under two minutes.
+- Deviation: Keycloak arrived in phase 1 instead of a self-issued JWT (decision #4), so the default stack uses about 1.1 GiB.
+- For phase 2: tools call the three accounts endpoints with the `X-User-Id` header (phase 2 decides how the identity reaches tools, decision #11). There is no spending-summary endpoint; sum transactions filtered by category and dates, and check `truncated` before trusting a sum (decision #38). The `bank-cli` client has only the password grant; the web chat page needs a browser login flow added to the realm, and its client needs the `bank-api` audience mapper (decision #39).
+- Review fixes (2026-11-10): audience check at the gateway, 401 for a token without a username, transactions `limit` and `truncated`, 400 for `from` after `to`, case-insensitive category, log lines cannot be forged, the redundant `hikari.schema` setting removed. The realm changed, so an existing volume needs `docker compose down -v` once.
+- Known gaps: accounts-service port 8081 bypasses the gateway (decision #35); seed dates move with the day the database was created; a new schema or a realm change needs `docker compose down -v` (or the change made by hand).
 
 ### 2. First agent
 
