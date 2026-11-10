@@ -4,6 +4,13 @@ server:
 spring:
   application:
     name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # With both set, keys come from jwk-set-uri and the iss claim must equal issuer-uri (no discovery call)
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bank}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bank/protocol/openid-connect/certs}
   cloud:
     gateway:
       server:
