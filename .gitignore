@@ -2,6 +2,9 @@
 .claude/
 CLAUDE.md
 
+# Local passwords for Compose; .env.example holds the names
+.env
+
 # Gradle and IDE output
 .gradle/
 build/
