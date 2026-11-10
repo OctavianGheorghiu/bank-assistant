@@ -39,7 +39,8 @@ Create a package only when the first class for it arrives; no empty packages. A 
 - No SQL or JPQL strings in Java code: no `JdbcClient`, `JdbcTemplate` or `@Query`. If a case really needs one (a large aggregate, a lock), ask first and record why in the decision log.
 - Flyway owns the schema: every change is a new `V<n>__<description>.sql` migration, and an applied migration is never edited. Hibernate runs with `spring.jpa.hibernate.ddl-auto=validate`, so a startup fails when an entity and the schema disagree.
 - `spring.jpa.open-in-view=false` and `spring.jpa.properties.hibernate.default_schema=<service schema>` in every service with a database.
-- Column names follow the default snake_case mapping (`customerId` -> `customer_id`); add `@Column` only when the default is wrong. A `CHAR(n)` column needs `@JdbcTypeCode(SqlTypes.CHAR)`.
+- Column names follow the default snake_case mapping (`customerId` -> `customer_id`); add `@Column` only when the default is wrong.
+- Every string column is `VARCHAR(n)` with an explicit length, matched by `@Column(length = n)` when it differs from 255. No `CHAR` or `TEXT` columns, and no type overrides such as `@JdbcTypeCode` for strings.
 - Read-only service classes or methods are `@Transactional(readOnly = true)`.
 
 ## Logging

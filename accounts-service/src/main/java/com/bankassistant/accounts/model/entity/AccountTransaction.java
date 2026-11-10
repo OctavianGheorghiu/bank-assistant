@@ -11,8 +11,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "account_transaction")
@@ -24,6 +22,7 @@ public class AccountTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 64)
     private String accountId;
 
     private OffsetDateTime bookedAt;
@@ -32,12 +31,13 @@ public class AccountTransaction {
     private long amountMinor;
 
     @Column(length = 3)
-    @JdbcTypeCode(SqlTypes.CHAR) // the column is CHAR(3); Hibernate assumes VARCHAR for String
     private String currency;
 
+    @Column(length = 32)
     private String category;
 
     private String description;
 
+    @Column(length = 100)
     private String counterparty;
 }
