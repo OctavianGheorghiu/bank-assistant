@@ -4,7 +4,7 @@ Update this table at the end of each phase chat. Outcome notes record what was a
 
 | Phase | Status | Brief |
 | --- | --- | --- |
-| 1. Foundation | Gate passed 2026-11-10; branch phase-1-foundation pushed, not yet merged | [phase-1-foundation.md](../phases/phase-1-foundation.md) |
+| 1. Foundation | Done 2026-11-10 (merged into main) | [phase-1-foundation.md](../phases/phase-1-foundation.md) |
 | 2. First agent | Not started | [phase-2-first-agent.md](../phases/phase-2-first-agent.md) |
 | 3. MCP | Not started | [phase-3-mcp.md](../phases/phase-3-mcp.md) |
 | 4. RAG | Not started | [phase-4-rag.md](../phases/phase-4-rag.md) |
