@@ -1,3 +1,35 @@
+-- Accounts schema and fake demo data. One migration for phase 1; later changes are new V<n> files.
+
+CREATE TABLE customer (
+    id   VARCHAR(64)  PRIMARY KEY, -- the Keycloak username, passed on by the gateway as X-User-Id
+    name VARCHAR(100) NOT NULL
+);
+
+-- balance_minor is stored (decision #37); the transactions stay as the ledger, so any code that
+-- inserts a transaction must update balance_minor in the same database transaction.
+CREATE TABLE account (
+    id            VARCHAR(64)  PRIMARY KEY,
+    customer_id   VARCHAR(64)  NOT NULL REFERENCES customer (id),
+    type          VARCHAR(16)  NOT NULL CHECK (type IN ('CURRENT', 'SAVINGS')),
+    name          VARCHAR(100) NOT NULL,
+    currency      VARCHAR(3)   NOT NULL,
+    balance_minor BIGINT       NOT NULL DEFAULT 0 -- cents
+);
+
+CREATE TABLE account_transaction (
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    account_id   VARCHAR(64)  NOT NULL REFERENCES account (id),
+    booked_at    TIMESTAMPTZ  NOT NULL,
+    amount_minor BIGINT       NOT NULL, -- cents; negative means money out
+    currency     VARCHAR(3)   NOT NULL,
+    category     VARCHAR(32)  NOT NULL,
+    description  VARCHAR(255) NOT NULL,
+    counterparty VARCHAR(100)
+);
+
+CREATE INDEX account_transaction_account_booked ON account_transaction (account_id, booked_at);
+
+-- Seed data --------------------------------------------------------------------------------------
 -- Fake demo data. Deterministic: amounts and which days have a purchase come from a hash of
 -- (customer, category, days ago), so every fresh database gets the same pattern.
 -- shortcut: dates are relative to the day this migration runs, so "last month" always has data,
@@ -68,3 +100,7 @@ CROSS JOIN months m
 CROSS JOIN monthly mo
 CROSS JOIN LATERAL (SELECT m.month_start + (mo.day_of_month - 1) AS mo_day) AS x
 WHERE mo_day > current_date - 366 AND mo_day < current_date;
+
+-- Balances from the seeded ledger
+UPDATE account a
+SET balance_minor = coalesce((SELECT sum(t.amount_minor) FROM account_transaction t WHERE t.account_id = a.id), 0);

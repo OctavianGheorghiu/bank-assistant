@@ -53,7 +53,7 @@ Every Spring service exposes `/actuator/health`, used by the Compose health chec
 | `settings.gradle.kts`, `build.gradle.kts` | Module list; shared Java toolchain, BOMs, Lombok and test setup for every module |
 | `<service>/build.gradle.kts` | That service's dependencies only |
 | `<service>/src/main/java/com/bankassistant/<name>/` | Root package per service (`accounts`, `gateway`) with sub-packages `controller`, `service`, `repository`, `model/entity`, `model/dto`, `events`, `exception`, `config`, `filter`, as needed: see [code-conventions.md](../design/code-conventions.md) |
-| `accounts-service/src/main/resources/db/migration/` | Flyway migrations (`V1__schema.sql`, `V2__seed.sql`) |
+| `accounts-service/src/main/resources/db/migration/` | Flyway migrations (`V1__init.sql`: schema and seed data; later changes are new `V<n>` files) |
 | `Dockerfile` | One multi-stage Dockerfile for every service: `--build-arg MODULE=<service>` |
 | `compose.yaml` | The whole stack; later infrastructure joins through Compose profiles (decision #1) |
 | `infra/postgres/init/01-init.sh` | Creates one schema and one login role per service, on the first start only |
