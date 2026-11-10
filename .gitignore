@@ -1,3 +1,10 @@
 # Claude Code files, kept local only
 .claude/
 CLAUDE.md
+
+# Gradle and IDE output
+.gradle/
+build/
+.idea/
+*.iml
+.vscode/
