@@ -41,14 +41,14 @@ public class AccountService {
         log.debug("getAccounts customerId={}", customerId);
         return accountRepository.findByCustomerIdOrderById(customerId).stream()
                 .map(account -> new AccountResponse(account.getId(), account.getName(), account.getType(),
-                        account.getCurrency(), toDecimal(balanceMinor(account.getId()))))
+                        account.getCurrency(), toDecimal(account.getBalanceMinor())))
                 .toList();
     }
 
     public BalanceResponse getBalance(String customerId, String accountId) {
         log.debug("getBalance customerId={} accountId={}", customerId, accountId);
         Account account = findOwnedAccount(customerId, accountId);
-        return new BalanceResponse(account.getId(), toDecimal(balanceMinor(account.getId())), account.getCurrency());
+        return new BalanceResponse(account.getId(), toDecimal(account.getBalanceMinor()), account.getCurrency());
     }
 
     /** Newest first. Dates are UTC days; from and to are inclusive; every filter is optional. */
@@ -77,13 +77,6 @@ public class AccountService {
     private Account findOwnedAccount(String customerId, String accountId) {
         return accountRepository.findByIdAndCustomerId(accountId, customerId)
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
-    }
-
-    // shortcut: sums the rows in Java (about 500 per account); switch to an aggregate query if accounts grow large
-    private long balanceMinor(String accountId) {
-        return transactionRepository.findByAccountId(accountId).stream()
-                .mapToLong(AccountTransaction::getAmountMinor)
-                .sum();
     }
 
     // shortcut: assumes 2 decimal places (EUR only); look up the currency's digits if other currencies appear

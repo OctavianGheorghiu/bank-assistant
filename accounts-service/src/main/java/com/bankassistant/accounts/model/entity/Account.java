@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/** A customer's account. Its balance is not stored: it is the sum of its transactions. */
+/** A customer's account. The balance is stored; it must change in the same transaction as each ledger row. */
 @Entity
 @Table(name = "account")
 @Getter
@@ -33,4 +33,7 @@ public class Account {
     @Column(length = 3)
     @JdbcTypeCode(SqlTypes.CHAR) // the column is CHAR(3); Hibernate assumes VARCHAR for String
     private String currency;
+
+    /** Cents; equals the sum of the account's transactions. */
+    private long balanceMinor;
 }
