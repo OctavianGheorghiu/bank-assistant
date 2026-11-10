@@ -44,5 +44,25 @@ services:
       start_period: 10s
     mem_limit: 512m
 
+  api-gateway:
+    build:
+      context: .
+      args:
+        MODULE: api-gateway
+    environment:
+      ACCOUNTS_SERVICE_URL: http://accounts-service:8081
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      accounts-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    mem_limit: 512m
+
 volumes:
   pgdata:

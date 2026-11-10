@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # /api/accounts/** from outside -> /accounts/** on accounts-service
+            - id: accounts
+              uri: ${ACCOUNTS_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/accounts/**
+              filters:
+                - StripPrefix=1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
