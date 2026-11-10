@@ -1,0 +1,21 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: accounts-service
+  datasource:
+    # Compose overrides the host with SPRING_DATASOURCE_URL
+    url: jdbc:postgresql://localhost:5432/bank
+    username: accounts
+    password: ${ACCOUNTS_DB_PASSWORD:}
+    hikari:
+      schema: accounts
+  flyway:
+    schemas: accounts
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
