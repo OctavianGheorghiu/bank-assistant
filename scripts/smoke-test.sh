@@ -17,7 +17,7 @@ check() { # description, expected, actual
 }
 http_status() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 token() { # username [client] -> access token from Keycloak (empty on failure)
-    curl -s -d grant_type=password -d client_id="${2:-bank-cli}" -d username="$1" --data-urlencode "password=$DEMO_USER_PASSWORD" \
+    curl -s -d grant_type=password -d client_id="${2:-bank-client}" -d username="$1" --data-urlencode "password=$DEMO_USER_PASSWORD" \
         "$KEYCLOAK/realms/bank/protocol/openid-connect/token" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p'
 }
 
