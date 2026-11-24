@@ -62,7 +62,7 @@ You need Docker (Docker Desktop on Windows, about 8 GB of memory for it) and bas
 
    ```bash
    set -a; . ./.env; set +a
-   TOKEN=$(curl -s -d grant_type=password -d client_id=bank-cli -d username=alice --data-urlencode "password=$DEMO_USER_PASSWORD" http://localhost:8180/realms/bank/protocol/openid-connect/token | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+   TOKEN=$(curl -s -d grant_type=password -d client_id=bank-client -d username=alice --data-urlencode "password=$DEMO_USER_PASSWORD" http://localhost:8180/realms/bank/protocol/openid-connect/token | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
    curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/accounts
    ```
 

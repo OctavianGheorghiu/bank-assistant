@@ -5,7 +5,7 @@
   "editUsernameAllowed": false,
   "clients": [
     {
-      "clientId": "bank-cli",
+      "clientId": "bank-client",
       "name": "Command line and smoke test",
       "description": "Public client for getting a token with username and password; local development only",
       "protocol": "openid-connect",
